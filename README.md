@@ -1,6 +1,6 @@
 # Computer_Graphics
 
-**Introduction: **
+**Introduction**:  
 Table tennis, also known as ping-pong and whiff-whaff, is a sport in which two or four players hit a lightweight ball, also known as the ping-pong ball, back and forth across a table using small rackets which here we have shown using 2 bars/paddles at other the sides. The game takes place on a hard table divided by a net, here visible as a line (2D view) for the game play. In this game, these basic scenes of a table and the ball moving across a basic background are developed using computer graphics. Here, we developed a simulation of a table tennis - cum - ping pong ball game which includes two bars, each controlled by one of the opponents and a ball moving between them, all of them with their respective animations.
 
 It is a simple, easy to understand game developed using opengl library and glut. The players can use keyboard keys to control the game. Here, after the game play begins, both of the players have the facility to move their paddle to protect the ball from touching the boundary. If the ball touches the boundary of a player (that is the ball is out), the point is awarded to the opponent. The player with the higher score wins the game. 

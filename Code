@@ -1,0 +1,231 @@
+#include <GL/glut.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string>
+#include <time.h>
+
+// global variables
+static GLint windowHeight = 800, windowWidth = 1200;
+static GLint orthoSizeX = (windowWidth/2), orthoSizeY = (windowHeight/2);
+
+static GLint player1_score = 0, player2_score = 0;
+static GLint player1_life = 3, player2_life = 3;
+static GLint Bar_boundary = 350, Bar_height = 100, Bar_width = 20, bar_velocity = 15.0;
+static GLint player1_bar_y = 0, player2_bar_y = 0, Bar_x = 595;
+static GLfloat ball_velocity_x = 0, ball_velocity_y = 0, saved_velocity_x = 0, saved_velocity_y = 0;
+static GLint ball_pos_x = 0, ball_pos_y = 0, ball_radius = 20;
+static GLboolean paused = true;
+
+void drawBall(int x, int y) {
+	glPushMatrix();
+
+	glTranslatef(x, y, 0);
+	glColor3f(1.0, 1.0, 1.0);
+	glutSolidSphere(ball_radius, 30, 5);
+
+	glPopMatrix();
+}
+
+// Quadilaterals are drawn as center line between two players
+void drawCenterLines() {
+	for (int y_pos = -(windowHeight/2) + 10 ; y_pos <= (windowHeight / 2) + 10; y_pos += 40) {
+		glBegin(GL_QUADS);
+		glColor3f(1.0, 1.0, 1.0);
+		glVertex2f(-3, y_pos-20);
+		glVertex2f(3, y_pos-20);
+		glVertex2f(3, y_pos);
+		glVertex2f(-3, y_pos);
+		glEnd();
+	}
+}
+
+// draw player bar with x and y
+void drawBar(int x, int y, bool player1) {
+	glPushMatrix();
+
+	glTranslatef(x, y, 0);
+
+	glBegin(GL_QUADS);
+	if (player1) {
+		glColor3f(0, 0, 0);
+	}
+	else {
+		glColor3f(1.0, 0, 0);
+	}
+	int height = Bar_height / 2;
+	int width = Bar_width / 2;
+	glVertex2f(-width, height);
+	glVertex2f(width, height);
+	glVertex2f(width, -height);
+	glVertex2f(-width, -height);
+	glEnd();
+
+	glPopMatrix();
+}
+
+
+void drawStrokeText(GLint score, int x, int y, int z)
+{
+	std::string score_str = std::to_string(score);
+	glPushMatrix();
+	glTranslatef(x, y + 8, z);
+	for (char ch : score_str)
+	{
+		glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ch);
+	}
+	glPopMatrix();
+}
+
+void display(void) {
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// create center lines
+	drawCenterLines();
+
+	// draw left Bar at (-Bar_x, player1_bar_y)
+	drawBar(-Bar_x, player1_bar_y, true);
+	// draw right Bar at (Bar_x, player2_bar_y)
+	drawBar(Bar_x, player2_bar_y, false);
+
+	// draw the ball (ball_pos_x, ball_pos_y)
+	drawBall(ball_pos_x, ball_pos_y);
+
+	// draw the score on the left for player 1
+	drawStrokeText(player1_score, -300, 200, 0);
+
+	// draw the score on the right for player 2
+	drawStrokeText(player2_score, 200, 200, 0);
+
+	// swap the current frame with the drawn frame
+	glutSwapBuffers();
+
+	// Flush everything to output
+	glFlush();
+}
+
+
+void init(void) {
+	// initalise display with background as black colors
+	glClearColor(0.0, 0.4, 0.0, 0.0);
+	srand(time(0));
+}
+
+void reshape(int w, int h) {
+	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-orthoSizeX, orthoSizeX, -orthoSizeY, orthoSizeY, -100, 100);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+
+void startGame(void) {
+
+	// move the ball
+	ball_pos_x += ball_velocity_x;
+	ball_pos_y += ball_velocity_y;
+
+	// ball hits the top or bottom
+	if (ball_pos_y + ball_radius > orthoSizeY || ball_pos_y - ball_radius < -orthoSizeY)
+		ball_velocity_y *= -1;
+
+	// ball hits the left Bar
+	if (ball_pos_x - ball_radius <= -Bar_x && ball_pos_x - ball_radius >= -Bar_x - (Bar_width / 2) &&
+		ball_velocity_x < 0)
+		if (ball_pos_y <= player1_bar_y + Bar_height && ball_pos_y >= player1_bar_y - Bar_height)
+			ball_velocity_x = -ball_velocity_x;
+
+
+	// ball hits the right Bar
+	if (ball_pos_x + ball_radius >= Bar_x && ball_pos_x + ball_radius <= Bar_x + (Bar_width / 2) &&
+		ball_velocity_x > 0)
+		if (ball_pos_y <= player2_bar_y + Bar_height && ball_pos_y >= player2_bar_y - Bar_height)
+			ball_velocity_x = -ball_velocity_x;
+
+	// player 1 scores if ball hits the wall
+	if (ball_pos_x + ball_radius > orthoSizeX) {
+		player1_score++;
+		printf("Player 1 = %d \n", player1_score);
+		ball_velocity_x = -ball_velocity_x;
+	}
+
+	// player 2 scores if ball hits the wall
+	if (ball_pos_x - ball_radius < -orthoSizeX) {
+		player2_score++;
+		printf("Player 2 = %d \n", player2_score);
+		ball_velocity_x = -ball_velocity_x;
+	}
+
+	glutPostRedisplay();
+}
+
+
+void keyboard(unsigned char key, int x, int y) {
+	switch (key) {
+		// move player 1 bar up
+	case 'w':
+		if (player1_bar_y < Bar_boundary)
+			player1_bar_y += bar_velocity;
+		glutPostRedisplay();
+		break;
+		// move player 1 bar down
+	case 's':
+		if (player1_bar_y > -Bar_boundary)
+			player1_bar_y -= bar_velocity;
+		glutPostRedisplay();
+		break;
+		// move player 2 bar up
+	case 'o':
+		if (player2_bar_y < Bar_boundary)
+			player2_bar_y += bar_velocity;
+		glutPostRedisplay();
+		break;
+		// move player 2 bar down
+	case 'l':
+		if (player2_bar_y > -Bar_boundary)
+			player2_bar_y -= bar_velocity;
+		glutPostRedisplay();
+		break;
+		// spacebar starts the game with initial ball velocity
+	case ' ':
+		if (paused && !ball_velocity_x && !ball_velocity_y) {
+			ball_velocity_x = (rand() % 5) + 1;
+			ball_velocity_y = (rand() % 5) + 1;
+			paused = false;
+		}
+		glutIdleFunc(startGame);
+		break;
+		// escape pauses and resumes the game
+	case 27:
+		if (!paused) {
+			saved_velocity_x = ball_velocity_x;
+			saved_velocity_y = ball_velocity_y;
+			ball_velocity_y = ball_velocity_x = 0;
+			paused = true;
+		}
+		else {
+			ball_velocity_y = saved_velocity_y;
+			ball_velocity_x = saved_velocity_x;
+			paused = false;
+		}
+		break;
+
+	default:
+		break;
+	}
+}
+
+
+int main(int argc, char** argv) {
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+	glutInitWindowSize(windowWidth, windowHeight);
+	glutCreateWindow("Table Tennis");
+	init();
+	glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
+	glutKeyboardFunc(keyboard);
+	glutMainLoop();
+	return 0;
+}

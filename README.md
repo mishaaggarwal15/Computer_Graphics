@@ -11,7 +11,7 @@ After analysing all of the requirements, we decided to use OpenGL and C++ as the
 In order to play the game, press “ ” (spacebar) to launch the ball. After pressing the spacebar key to launch the ball, the ball will start moving randomly. The players can control the paddle movement. It can be controlled by the keyboard. The player1 uses the “w” and “s” keys to move the paddle up and down, and player2 uses the “o” and “l” keys to move the paddle up and down respectively. During the game, if at any time the players wish to pause a new game, they can press the “esc” key. The goal of the game is for the player to protect the ball from touching the boundary, i.e not letting it be declared as a miss leading to loss of a point to the opponent.  
 
 
-
+![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png)
 
 
 
